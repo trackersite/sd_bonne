@@ -52,6 +52,14 @@ int main (int argc, char *argv[]) {
       }
     	printf("%s: Message réçu du Client via Multicast = \"%s\"\n", inet_ntoa(multicast_s.sin_addr), infos_client.pseudo);
       printf("Adresse réçu du Client via Multicast = \"%s\"\n", infos_client.adresse);
+
+      strcpy(clients_connectes[identifiant-1].pseudo, infos_client.pseudo);
+      strcpy(clients_connectes[identifiant-1].adressetcp, infos_client.adresse);
+      clients_connectes[identifiant-1].id = identifiant;
+      /*printf("ps%s\n", clients_connectes[identifiant-1].pseudo);
+      printf("ad%s\n", clients_connectes[identifiant-1].adressetcp);
+      printf("id%d\n", clients_connectes[identifiant-1].id);*/
+      identifiant++;
       /*********************************************************************/
       /*                                                                   */
       /*                                                                   */
@@ -79,11 +87,11 @@ int main (int argc, char *argv[]) {
           printf("connected to the server..\n");
       }
       strcpy(buffer_serveur, "Hello from TCP");
-      if (send(socket_tcp, buffer_serveur, sizeof(buffer_serveur), 0) < 0) {
+      if (send(socket_tcp, &clients_connectes, sizeof(clients_connectes), 0) < 0) {
           perror("Send()");
           exit(1);
       }
-      identifiant++;
+
       printf("Message envoyé au client.\n");
 
       close(socket_tcp);
