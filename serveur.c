@@ -78,7 +78,7 @@ int main (int argc, char *argv[]) {
       } else {
           printf("connected to the server..\n");
       }
-
+      strcpy(buffer_serveur, "Hello from TCP");
       if (send(socket_tcp, buffer_serveur, sizeof(buffer_serveur), 0) < 0) {
           perror("Send()");
           exit(1);
