@@ -10,97 +10,84 @@
 #include "serveur.h"
 
 int main (int argc, char *argv[]) {
-  struct sockaddr_in addr;
-  int addrlen, sock, cnt;
-  struct ip_mreq mreq;
-  char message[50];
+  /*UDP*/
+  struct sockaddr_in multicast_s; /*adresse et inof de multicast*/
+  struct info_client infos_client; /* contient les infos d'un client qui passe par le multicast*/
+  struct liste_client clients_connectes[4];
+  int multicast_len;  /*taille de la structure multicast_s*/
+  struct ip_mreq requete_multicast;
   /* TCP */
-  char buf[1024];              /* buffer for sending & receiving data */
-  struct sockaddr_in client; /* client address information          */
-  struct sockaddr_in server, addr_client; /* server address information          */
-  int s;                     /* socket for accepting connections    */
-  int ns;                    /* socket connected to client          */
-  int namelen;               /* length of client name               */
-  int sockfd;
+  char buffer_serveur[TAILLE_BUFFER];/* buffer for sending & receiving data */
+  struct sockaddr_in contacter_client; /* server address information*/
+  int socket_mcast;                 /* socket multicast serveur          */
+  int socket_tcp;                 /* socket connected to client          */
+  int identifiant = 1;
+  char* id;
 
   /* set up socket */
-  sock = socket(AF_INET, SOCK_DGRAM, 0);
-  if (sock < 0) {
-    perror("socket");
-    exit(1);
+  socket_mcast = socket(AF_INET, SOCK_DGRAM, 0);
+  if (socket_mcast < 0) {
+      perror("socket");
+      exit(1);
   }
+  bzero((char *)&multicast_s, sizeof(multicast_s));
+  multicast_s.sin_family = AF_INET;
+  multicast_s.sin_addr.s_addr = htonl(INADDR_ANY);
+  multicast_s.sin_port = htons(PORT_UDP);
+  multicast_len = sizeof(multicast_s);
 
-  bzero((char *)&addr, sizeof(addr));
-  addr.sin_family = AF_INET;
-  addr.sin_addr.s_addr = htonl(INADDR_ANY);
-  addr.sin_port = htons(PORT_UDP);
-  addrlen = sizeof(addr);
-
-  if (bind(sock, (struct sockaddr *) &addr, sizeof(addr)) < 0) {
-    perror("bind");
-	  exit(1);
+  if (bind(socket_mcast, (struct sockaddr *) &multicast_s, sizeof(multicast_s)) < 0) {
+      perror("bind");
+  	  exit(1);
   }
-
-  mreq.imr_multiaddr.s_addr = inet_addr(MULTICAST_GROUP);
-  mreq.imr_interface.s_addr = htonl(INADDR_ANY);
-
-  if (setsockopt(sock, IPPROTO_IP, IP_ADD_MEMBERSHIP, &mreq, sizeof(mreq)) < 0) {
-	 perror("setsockopt mreq");
-	 exit(1);
+  requete_multicast.imr_multiaddr.s_addr = inet_addr(MULTICAST_GROUP);
+  requete_multicast.imr_interface.s_addr = htonl(INADDR_ANY);
+  if (setsockopt(socket_mcast, IPPROTO_IP, IP_ADD_MEMBERSHIP, &requete_multicast, sizeof(requete_multicast)) < 0) {
+  	 perror("setsockopt requete_multicast");
+  	 exit(1);
   }
-
   while (1) {
- 	 if ((recvfrom(sock, message, sizeof(message), 0, (struct sockaddr *) &addr, &addrlen) < 0)) {
-     perror("recvfrom() server");
-   }
-	 printf("%s: Message réçu du Client par Multicast = \"%s\"\n", inet_ntoa(addr.sin_addr), message);
+      if ((recvfrom(socket_mcast,(struct info_client*)&infos_client , sizeof(infos_client), 0, (struct sockaddr *) &multicast_s, &multicast_len) < 0)) {
+          perror("recvfrom() server");
+      }
+    	printf("%s: Message réçu du Client via Multicast = \"%s\"\n", inet_ntoa(multicast_s.sin_addr), infos_client.pseudo);
+      printf("Adresse réçu du Client via Multicast = \"%s\"\n", infos_client.adresse);
+      /*********************************************************************/
+      /*                                                                   */
+      /*                                                                   */
+      /*                          PARTIE TCP                               */
+      /*                                                                   */
+      /*                                                                   */
+      /*********************************************************************/
+      // socket create and varification
+      socket_tcp = socket(AF_INET, SOCK_STREAM, 0);
+      if (socket_tcp == -1) {
+          printf("socket creation failed...\n");
+          exit(0);
+      }
+      bzero(&contacter_client, sizeof(contacter_client));
+      // assign IP, PORT
+      contacter_client.sin_family = AF_INET;
+      contacter_client.sin_addr.s_addr = inet_addr(infos_client.adresse);
+      contacter_client.sin_port = htons(PORT_TCP);
 
+      // connect the client socket to server socket
+      if (connect(socket_tcp, (struct sockaddr*)&contacter_client, sizeof(contacter_client)) != 0) {
+          printf("connection with the server failed...\n");
+          exit(0);
+      } else {
+          printf("connected to the server..\n");
+      }
 
-   // socket create and varification
-    sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (sockfd == -1) {
-        printf("socket creation failed...\n");
-        exit(0);
-    }
+      if (send(socket_tcp, buffer_serveur, sizeof(buffer_serveur), 0) < 0) {
+          perror("Send()");
+          exit(1);
+      }
+      identifiant++;
+      printf("Message envoyé au client.\n");
 
-  bzero(&addr_client, sizeof(addr_client));
-  // assign IP, PORT
-  addr_client.sin_family = AF_INET;
-  addr_client.sin_addr.s_addr = inet_addr("127.0.0.1");
-  addr_client.sin_port = htons(PORT_TCP);
-
-  // connect the client socket to server socket
-  if (connect(sockfd, (struct sockaddr*)&addr_client, sizeof(addr_client)) != 0) {
-      printf("connection with the server failed...\n");
-      exit(0);
-  } else {
-    printf("connected to the server..\n");
+      close(socket_tcp);
   }
-
-  memset(buf, 0, TAILLE_BUFFER);
-  strcpy(buf, "Hello from TCP");
-
-  if (send(sockfd, buf, sizeof(buf), 0) < 0) {
-      perror("Send()");
-      exit(5);
-  }
-
-  printf("Message envoyé au client.\n");
-
-  }
-
-  /*********************************************************************/
-  /*                                                                   */
-  /*                                                                   */
-  /*                          PARTIE TCP                               */
-  /*                                                                   */
-  /*                                                                   */
-  /*********************************************************************/
-
-   close(ns);
-   close(s);
-
-   printf("Server ended successfully\n");
-
-   return 0;
+  printf("Server ended successfully\n");
+  return 0;
 }
