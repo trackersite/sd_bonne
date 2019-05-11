@@ -119,14 +119,16 @@ int main (int argc, char *argv[]) {
     printf("Message recu du serveur TCP pseudo: %s\n", log_clients[0].pseudo);
     printf("Message recu du serveur TCP adresse: %s\n", log_clients[0].adressetcp);
     printf("Message recu du serveur TCP id : %d\n", log_clients[0].id);
-    /*
+	  
+    /* Tester l'affichage de donnes d'autres joueurs
     printf("Message recu du serveur TCP pseudo: %s\n", log_clients[1].pseudo);
     printf("Message recu du serveur TCP adresse: %s\n", log_clients[1].adressetcp);
     printf("Message recu du serveur TCP id : %d\n", log_clients[1].id);
     */
+	  
     //On fait une boucle pour que le client conecte aux autre client deja sur la partie
     for (int i = 0; i < 4; i++) {
-      /*TODO:C'EST L'IDDE IL FAUT LE MODIFIER JE PENSE
+      /*TODO:C'EST L'IDEE IL FAUT LE MODIFIER JE PENSE
       if (log_clients[i].pseudo != info_client.pseudo && log_clients[i].adresse != NULL) {
         /* connexion de ce client aux autres client de la partie */
         // socket create and varification
