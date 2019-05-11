@@ -116,10 +116,42 @@ int main (int argc, char *argv[]) {
       exit(0);
   } else {
 
-      printf("Message recu du serveur TCP : %s\n", log_clients[0].pseudo);
-      printf("Message recu du serveur TCP : %s\n", log_clients[0].adressetcp);
-      printf("Message recu du serveur TCP : %d\n", log_clients[0].id);
-  }
+    printf("Message recu du serveur TCP pseudo: %s\n", log_clients[0].pseudo);
+    printf("Message recu du serveur TCP adresse: %s\n", log_clients[0].adressetcp);
+    printf("Message recu du serveur TCP id : %d\n", log_clients[0].id);
+    //On fait une boucle pour que le client conecte aux autre client deja sur la partie
+    for (int i = 0; i < 4; i++) {
+      /*TODO:C'EST L'IDDE IL FAUT LE MODIFIER JE PENSE
+      if (log_clients[i].pseudo != info_client.pseudo) {
+        /* connexion de ce client aux autres client de la partie */
+        // socket create and varification
+      /*  struct sockaddr_in etab_conn_autres;
+        int conn_aux_autres
+        conn_aux_autres = socket(AF_INET, SOCK_STREAM, 0);
+        if (conn_aux_autres == -1) {
+            printf("socket creation failed...\n");
+            exit(0);
+        }
+        bzero(&etab_conn_autres, sizeof(etab_conn_autres));
+        // assign IP, PORT
+        etab_conn_autres.sin_family = AF_INET;
+        etab_conn_autres.sin_addr.s_addr = inet_addr(infos_client.adresse);
+        etab_conn_autres.sin_port = htons(PORT_TCP);
+        // connect the client socket to server socket
+        if (connect(conn_aux_autres, (struct sockaddr*)&etab_conn_autres, sizeof(etab_conn_autres)) != 0) {
+            printf("connection with the server failed...\n");
+            exit(0);
+        } else {
+            printf("connected to the server..\n");
+        }
+        strcpy(buffer_serveur, "Hello from TCP");
+        if (send(conn_aux_autres, &etab_conn_autres, sizeof(etab_conn_autres), 0) < 0) {
+            perror("Send()");
+            exit(1);
+        }*/
+      }
+    }
+  
   printf("Tout s'est bien passée\n");
   return 0;
 }
