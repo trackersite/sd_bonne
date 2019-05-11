@@ -11,6 +11,7 @@
 
 int main (int argc, char *argv[]) {
   struct info_client info_client;
+  struct liste_client log_clients[4];
   struct sockaddr_in multicast_c;
   int multicastlen, socket_mcast, err_envoi;
 
@@ -53,9 +54,6 @@ int main (int argc, char *argv[]) {
   requete_serveur.sin_family      = AF_INET;
   requete_serveur.sin_port        = htons(PORT_TCP);
   requete_serveur.sin_addr.s_addr = *((unsigned long *)hostnm->h_addr);
-
-  printf("DEBUG : %s\n", inet_ntoa(requete_serveur.sin_addr));
-
   printf("Veuillez choisir votre pseudo : ");
   scanf("%s", info_client.pseudo);
   strcpy(info_client.adresse, inet_ntoa(requete_serveur.sin_addr));
@@ -113,11 +111,14 @@ int main (int argc, char *argv[]) {
       printf("Connexion acceptee.\n");
   }
   /* The server sends back the same message. Receive it into the buffer. */
-  if (recv(accepte_tcp, buffer_tcp, sizeof(buffer_tcp), 0) < 0) {
+  if (recv(accepte_tcp, (struct liste_client*)&log_clients, sizeof(log_clients), 0) < 0) {
       perror("Recv()");
       exit(0);
   } else {
-      printf("Message recu du serveur TCP : %s\n", buffer_tcp);
+
+      printf("Message recu du serveur TCP : %s\n", log_clients[0].pseudo);
+      printf("Message recu du serveur TCP : %s\n", log_clients[0].adressetcp);
+      printf("Message recu du serveur TCP : %d\n", log_clients[0].id);
   }
   printf("Tout s'est bien passée\n");
   return 0;
