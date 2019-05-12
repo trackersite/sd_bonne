@@ -21,6 +21,9 @@ int main (int argc, char *argv[]) {
   int server_len;                     /* taille structure socket tcp */
   int accepte_tcp;                    /* evaluation de fonction accept */
   struct liste_client clients_en_ligne[4];
+  char buffer_echange[1024];
+  int socket_autre_client;
+  struct sockaddr_in addr_autre_clients;
 
   // socket create and verification
   socket_tcp = socket(AF_INET, SOCK_STREAM, 0);
@@ -112,10 +115,8 @@ int main (int argc, char *argv[]) {
       perror("Recv()");
       exit(0);
   } else {
-    int socket_autre_client;
-    struct sockaddr_in addr_autre_clients;
-    char buffer_echange[1024];
 
+    memset(buffer_tcp, 0, 1024);
     printf("Liste des clients connectes: %s\n", buffer_tcp);
 
     //On fait une boucle pour que le client conecte aux autre client deja sur la partie
@@ -125,8 +126,8 @@ int main (int argc, char *argv[]) {
         printf("Pseudo du client : %s\n", clients_en_ligne[i].pseudo);
         printf("Adresse IP du client : %s\n", clients_en_ligne[i].adressetcp);
 
-        if (clients_en_ligne[i].pseudo != info_client.pseudo) {
-
+        /* Etablir la connexion avec autre clients si les ID sont differents */
+        if (clients_en_ligne[i].id != 1) {
           socket_autre_client = socket(AF_INET, SOCK_STREAM, 0);
           if (socket_autre_client == -1) {
               printf("socket creation failed...\n");
@@ -163,7 +164,7 @@ int main (int argc, char *argv[]) {
 
   }
 
-  //close(socket_autre_client);
+  close(socket_autre_client);
 
   return 0;
 }
