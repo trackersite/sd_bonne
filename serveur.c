@@ -30,11 +30,16 @@ int main (int argc, char *argv[]) {
       perror("socket");
       exit(1);
   }
+
   bzero((char *)&multicast_s, sizeof(multicast_s));
   multicast_s.sin_family = AF_INET;
   multicast_s.sin_addr.s_addr = htonl(INADDR_ANY);
   multicast_s.sin_port = htons(PORT_UDP);
   multicast_len = sizeof(multicast_s);
+
+  for (int i = 0; i < 4; i++) {
+    clients_connectes[i].id = -1;
+  }
 
   if (bind(socket_mcast, (struct sockaddr *) &multicast_s, sizeof(multicast_s)) < 0) {
       perror("bind");
@@ -50,16 +55,14 @@ int main (int argc, char *argv[]) {
       if ((recvfrom(socket_mcast,(struct info_client*)&infos_client , sizeof(infos_client), 0, (struct sockaddr *) &multicast_s, &multicast_len) < 0)) {
           perror("recvfrom() server");
       }
-    	printf("%s: Message réçu du Client via Multicast = \"%s\"\n", inet_ntoa(multicast_s.sin_addr), infos_client.pseudo);
-      printf("Adresse réçu du Client via Multicast = \"%s\"\n", infos_client.adresse);
+
+    	//printf("%s: Message réçu du Client via Multicast = \"%s\"\n", inet_ntoa(multicast_s.sin_addr), infos_client.pseudo);
+      //printf("Adresse réçu du Client via Multicast = \"%s\"\n", infos_client.adresse);
 
       strcpy(clients_connectes[identifiant-1].pseudo, infos_client.pseudo);
       strcpy(clients_connectes[identifiant-1].adressetcp, infos_client.adresse);
       clients_connectes[identifiant-1].id = identifiant;
-      /*printf("ps%s\n", clients_connectes[identifiant-1].pseudo);
-      printf("ad%s\n", clients_connectes[identifiant-1].adressetcp);
-      printf("id%d\n", clients_connectes[identifiant-1].id);*/
-      identifiant++;
+
       /*********************************************************************/
       /*                                                                   */
       /*                                                                   */
@@ -73,28 +76,34 @@ int main (int argc, char *argv[]) {
           printf("socket creation failed...\n");
           exit(0);
       }
+
       bzero(&contacter_client, sizeof(contacter_client));
       // assign IP, PORT
       contacter_client.sin_family = AF_INET;
       contacter_client.sin_addr.s_addr = inet_addr(infos_client.adresse);
       contacter_client.sin_port = htons(PORT_TCP);
 
-      // connect the client socket to server socket
-      if (connect(socket_tcp, (struct sockaddr*)&contacter_client, sizeof(contacter_client)) != 0) {
-          printf("connection with the server failed...\n");
-          exit(0);
+      printf("identifiant = %d\n", identifiant);
+
+      /* Accepter que 4 clients */
+      if (identifiant > 4) {
+        printf("Connexion refuse, le serveur est plein.\n");
+        close(socket_tcp);
       } else {
-          printf("connected to the server..\n");
-      }
-      strcpy(buffer_serveur, "Hello from TCP");
-      if (send(socket_tcp, &clients_connectes, sizeof(clients_connectes), 0) < 0) {
-          perror("Send()");
-          exit(1);
-      }
+        /* Si le nombre de clients <= 4 alors accepter la connexion */
+        if (connect(socket_tcp, (struct sockaddr*)&contacter_client, sizeof(contacter_client)) != 0) {
+            printf("connection with the server failed...\n");
+            exit(0);
+        }
 
-      printf("Message envoyé au client.\n");
+        if (send(socket_tcp, clients_connectes, sizeof(clients_connectes), 0) < 0) {
+            perror("Send()");
+            exit(1);
+        }
+        identifiant++;
 
-      close(socket_tcp);
+        close(socket_tcp);
+    }
   }
   printf("Server ended successfully\n");
   return 0;
