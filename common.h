@@ -14,6 +14,7 @@ struct info_client {
   char adresse[24];
 };
 struct liste_client {
+  int id;
   char pseudo[24];
   char adressetcp[24];
   char identifiant;
