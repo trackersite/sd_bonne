@@ -160,9 +160,21 @@ int main (int argc, char *argv[]) {
 
   close(socket_tcp);
 
-  while (1) {
-
-  }
+  do {
+      menuAttente();
+      scanf("%d", &choix);
+      switch(choix){
+          case 1:
+            //lancerPartie
+            printf("La partie sera lancceeeee\n");
+            break;
+          case 9:
+            break;
+          default:
+            printf("\nEntrez un nombre valide! \n \n");
+            break;
+          }
+  }while(choix != 9);
 
   close(socket_autre_client);
 
