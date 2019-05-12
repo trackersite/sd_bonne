@@ -21,6 +21,6 @@ struct liste_client {
 };
 
 int creerSocketTCP();
-
+void menuAttente();
 
 #endif
