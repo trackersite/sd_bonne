@@ -37,6 +37,21 @@
      perror("erreur bind socket écoute");
      exit(1);
    }
+  
+   void menuAttente(){
+     printf("\t***************************************************\n");
+     printf("\t**               SALLE D'ATTENTE                 **\n");
+     printf("\t***************************************************\n");
+     printf("\t***************************************************\n");
+     printf("\t**                                               **\n");
+     printf("\t**              1.- Commencer partie             **\n");
+     printf("\t**                                               **\n");
+     printf("\t**              9.- Deconnecter                  **\n");
+     printf("\t**                                               **\n");
+     printf("\t***************************************************\n");
+     printf("\t***************************************************\n");
+     printf("\tSaisie: ");
+}
 
    return socket_ecoute;
  }
