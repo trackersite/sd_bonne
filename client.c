@@ -112,56 +112,58 @@ int main (int argc, char *argv[]) {
       perror("Recv()");
       exit(0);
   } else {
-      printf("Nouveau client connecte : %s\n", buffer_tcp);
+    int socket_autre_client;
+    struct sockaddr_in addr_autre_clients;
+    char buffer_echange[1024];
 
-      printf("Message recu du serveur TCP pseudo: %s\n", clients_en_ligne[0].pseudo);
-printf("Message recu du serveur TCP adresse: %s\n", clients_en_ligne[0].adressetcp);
-printf("Message recu du serveur TCP id : %d\n", clients_en_ligne[0].id);
+    printf("Liste des clients connectes: %s\n", buffer_tcp);
 
-/* Tester l'affichage de donnes d'autres joueurs
-printf("Message recu du serveur TCP pseudo: %s\n", log_clients[1].pseudo);
-printf("Message recu du serveur TCP adresse: %s\n", log_clients[1].adressetcp);
-printf("Message recu du serveur TCP id : %d\n", log_clients[1].id);
-*/
+    //On fait une boucle pour que le client conecte aux autre client deja sur la partie
+    for (int i = 0; i < 4; i++) {
+      if (clients_en_ligne[i].id != -1) {
+        printf("Identifiant : %d\n", clients_en_ligne[i].id);
+        printf("Pseudo du client : %s\n", clients_en_ligne[i].pseudo);
+        printf("Adresse IP du client : %s\n", clients_en_ligne[i].adressetcp);
 
-//On fait une boucle pour que le client conecte aux autre client deja sur la partie
-for (int i = 0; i < 4; i++) {
-  /*TODO:C'EST L'IDEE IL FAUT LE MODIFIER JE PENSE
-  if (log_clients[i].pseudo != info_client.pseudo && log_clients[i].adresse != NULL) {
-    /* connexion de ce client aux autres client de la partie */
-    // socket create and varification
-  /*  struct sockaddr_in etab_conn_autres;
-    int conn_aux_autres
-    conn_aux_autres = socket(AF_INET, SOCK_STREAM, 0);
-    if (conn_aux_autres == -1) {
-        printf("socket creation failed...\n");
-        exit(0);
+        if (clients_en_ligne[i].pseudo != info_client.pseudo) {
+
+          socket_autre_client = socket(AF_INET, SOCK_STREAM, 0);
+          if (socket_autre_client == -1) {
+              printf("socket creation failed...\n");
+              exit(0);
+          }
+
+          bzero(&addr_autre_clients, sizeof(addr_autre_clients));
+          // assign IP, PORT
+          addr_autre_clients.sin_family = AF_INET;
+          addr_autre_clients.sin_addr.s_addr = inet_addr(clients_en_ligne[i].adressetcp);
+          addr_autre_clients.sin_port = htons(PORT_TCP);
+
+          // connect the client socket to server socket
+          if (connect(socket_autre_client, (struct sockaddr*)&addr_autre_clients, sizeof(addr_autre_clients)) != 0) {
+              printf("connection with the server failed...\n");
+              exit(0);
+          }
+
+          strcpy(buffer_echange, "Hello from Client one to Client two.");
+          printf("Message d'autre client : %s\n", buffer_echange);
+
+          if (send(socket_autre_client, buffer_echange, sizeof(buffer_echange), 0) < 0) {
+              perror("Send()");
+              exit(1);
+          }
+        }
+      }
     }
-    bzero(&etab_conn_autres, sizeof(etab_conn_autres));
-    // assign IP, PORT
-    etab_conn_autres.sin_family = AF_INET;
-    etab_conn_autres.sin_addr.s_addr = inet_addr(infos_client.adresse);
-    etab_conn_autres.sin_port = htons(PORT_TCP);
-    // connect the client socket to server socket
-    if (connect(conn_aux_autres, (struct sockaddr*)&etab_conn_autres, sizeof(etab_conn_autres)) != 0) {
-        printf("connection with the server failed...\n");
-        exit(0);
-    } else {
-        printf("connected to the server..\n");
-    }
-    strcpy(buffer_serveur, "Hello from TCP");
-    if (send(conn_aux_autres, &etab_conn_autres, sizeof(etab_conn_autres), 0) < 0) {
-        perror("Send()");
-        exit(1);
-    }*/
   }
-}
 
   close(socket_tcp);
 
   while (1) {
 
   }
+
+  //close(socket_autre_client);
 
   return 0;
 }
