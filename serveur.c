@@ -83,8 +83,6 @@ int main (int argc, char *argv[]) {
       contacter_client.sin_addr.s_addr = inet_addr(infos_client.adresse);
       contacter_client.sin_port = htons(PORT_TCP);
 
-      printf("identifiant = %d\n", identifiant);
-
       /* Accepter que 4 clients */
       if (identifiant > 4) {
         printf("Connexion refuse, le serveur est plein.\n");
@@ -95,6 +93,8 @@ int main (int argc, char *argv[]) {
             printf("connection with the server failed...\n");
             exit(0);
         }
+
+        printf("Client avec identifiant \"%d\" est connecte.\n", identifiant);
 
         if (send(socket_tcp, clients_connectes, sizeof(clients_connectes), 0) < 0) {
             perror("Send()");
