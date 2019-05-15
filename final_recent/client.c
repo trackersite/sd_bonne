@@ -27,7 +27,10 @@ int main (int argc, char *argv[]) {
   struct sockaddr_in addr_autre_clients; /* adresse des autres clients */
   char name[TAILLE_BUFFER]; /* buffer qui contient les messages entre clients TCP */
   int choix; /* sert pour le choix dans le menu */
-  int score = -1; /* score gagnant de la partie */
+  int nb_joueurs = 1;
+  int des[3];
+  int gagne = 0;
+  int score = 0;
 
 
   /* creation de la socket UDP pour la partie Multicast */
@@ -79,10 +82,10 @@ int main (int argc, char *argv[]) {
   multicast_c.sin_addr.s_addr = inet_addr(MULTICAST_GROUP);
 
   /* envoyer la requête au Multicast contenant les données du client TCP */
-	if ((sendto(socket_mcast, &info_client, sizeof(info_client), 0, (struct sockaddr *) &multicast_c, multicastlen)) == -1) {
-   	   perror("Multicast sendto()");
-  	   exit(EXIT_FAILURE);
-	}
+    if ((sendto(socket_mcast, &info_client, sizeof(info_client), 0, (struct sockaddr *) &multicast_c, multicastlen)) == -1) {
+          perror("Multicast sendto()");
+         exit(EXIT_FAILURE);
+    }
 
   /*********************************************************************/
   /*                          PARTIE TCP                               */
@@ -90,8 +93,8 @@ int main (int argc, char *argv[]) {
 
   /* Permettre de connecter plusieurs clients en meme temps. */
   if (setsockopt(socket_tcp, SOL_SOCKET, SO_REUSEADDR, &requete_serveur, sizeof(requete_serveur)) < 0) {
-  	 perror("client setsockopt()");
-  	 exit(EXIT_FAILURE);
+       perror("client setsockopt()");
+       exit(EXIT_FAILURE);
   }
 
   /* bind adresse TCP */
@@ -136,6 +139,7 @@ int main (int argc, char *argv[]) {
         /* Etablir la connexion avec autre clients si les ID sont differents */
         if (clients_en_ligne[i].id != 1) {
           socket_autre_client = socket(AF_INET, SOCK_STREAM, 0);
+          nb_joueurs++;
           if (socket_autre_client == -1) {
               printf("socket creation failed...\n");
               exit(EXIT_FAILURE);
@@ -148,6 +152,11 @@ int main (int argc, char *argv[]) {
           addr_autre_clients.sin_addr.s_addr = inet_addr(clients_en_ligne[i].adressetcp);
           addr_autre_clients.sin_port = htons(PORT_TCP);
 
+          /* Permettre de connecter plusieurs clients en meme temps. */
+          if (setsockopt(socket_autre_client, SOL_SOCKET, SO_REUSEADDR, &addr_autre_clients, sizeof(addr_autre_clients)) < 0) {
+             perror("client setsockopt()");
+             exit(EXIT_FAILURE);
+          }
           /* connexion TCP  */
           if (connect(socket_autre_client, (struct sockaddr*)&addr_autre_clients, sizeof(addr_autre_clients)) != 0) {
               perror("client connect()");
@@ -155,7 +164,7 @@ int main (int argc, char *argv[]) {
           }
 
           /* messageà envoyer */
-          strcpy(buffer_echange, "Salut de la part d'un client.");
+          strcpy(buffer_echange, "\tSalut de la part d'un client.");
           printf("Message d'autre client : %s\n", buffer_echange);
 
           /* envoie de message */
@@ -171,24 +180,70 @@ int main (int argc, char *argv[]) {
   /* fermeture de la socket écoute */
   close(socket_tcp);
 
+  int cont = 1;
   /* le menu */
   do {
       menuAttente();
       scanf("%d", &choix);
       switch(choix){
           case 1:
-            if (score < 0) {
-              printf("\tVeuillez d'abord definir le score gagnant.\n");
-              break;
-            }
+            printf("\tVeuillez choisir une score : ");
+            scanf("%d", &score);
+            while(gagne == 0){
+              printf("\t*********************TOUR %d*********************\n", cont);
+              for(int i = 0; i < 3; i++){
+                for (int j = 1; j < 4; j++) {
+                          des[j] = 0;
+                          des[j] = rand()%(1-7) +1;
+                          printf("\tDe %d: %d\n", j,des[j]);
+                    }
+                    //cas de la velute
+                    if(des[0]+ des[1] == des[2]){
+                      clients_en_ligne[i].score = clients_en_ligne[i].score + (des[2] * des[2]);
+                    }
 
-            printf("\tLA PARTIE COMMENCE!\n");
-            printf("\tLE SCORE GAGNANT EST DE %d POINTS!\n", score);
+                    //cas de la chouette
+                    if(des[0] == des[1]){
+                      clients_en_ligne[i].score = clients_en_ligne[i].score + (des[0] * des[0]);
+                    }
+
+                    //cas du cul de chouette
+                    if(des[0] == des[1] == des[2]){
+                      switch(des[0]){
+                          case 1:
+                            clients_en_ligne[i].score = clients_en_ligne[i].score + 50;
+                            break;
+                          case 2:
+                            clients_en_ligne[i].score = clients_en_ligne[i].score + 60;
+                            break;
+                          case 3:
+                            clients_en_ligne[i].score = clients_en_ligne[i].score + 70;
+                            break;
+                          case 4:
+                            clients_en_ligne[i].score = clients_en_ligne[i].score + 80;
+                            break;
+                          case 5:
+                            clients_en_ligne[i].score = clients_en_ligne[i].score + 90;
+                            break;
+                          case 6:
+                            clients_en_ligne[i].score = clients_en_ligne[i].score + 100;
+                            break;
+                      }
+                    }
+                    for (int i = 0; i < 4; i++) {
+                        printf("\tScore %s: %d\n", clients_en_ligne[i].pseudo, clients_en_ligne[i].score);
+                    }
+                    if(clients_en_ligne[i].score >= score){
+                      printf("\t%s a gagné! \n", clients_en_ligne[i].pseudo);
+                      gagne = 1;
+                      break;
+                    }
+                  }
+                  printf("\n");
+                  cont++;
+                }
             break;
           case 2:
-            score = definirLeScore();
-            break;
-          case 3:
             trierListe(clients_en_ligne);
             break;
           case 9:
